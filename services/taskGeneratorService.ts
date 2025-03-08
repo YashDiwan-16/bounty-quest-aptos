@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import TwitterApi from "twitter-api-v2";
 
 export interface GeneratedTask {
+  title: string;
   description: string;
   category: "blockchain" | "memes" | "nfts";
   requirements: string[];
@@ -45,9 +46,37 @@ export class TaskGeneratorService {
       Make the task fun and engaging while maintaining relevance to crypto/web3 culture.
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return JSON.parse(response.text());
+    try {
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+
+      // Extract JSON from the response - find content between first { and last }
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("No JSON object found in the response");
+      }
+
+      const jsonText = jsonMatch[0];
+      return JSON.parse(jsonText);
+    } catch (error) {
+      console.error("Error generating task:", error);
+      // Fallback to a default task in case of failure
+      return {
+        title: "Default Twitter Challenge",
+        description:
+          "Create an engaging tweet about the future of blockchain technology",
+        category: "blockchain",
+        requirements: [
+          "Must include at least one relevant hashtag",
+          "Keep it under 280 characters",
+        ],
+        evaluationCriteria: [
+          "Creativity",
+          "Relevance to blockchain",
+          "Engagement potential",
+        ],
+      };
+    }
   }
 
   private static async GenerateTweetContent(
