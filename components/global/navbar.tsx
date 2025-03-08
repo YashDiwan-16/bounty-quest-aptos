@@ -26,7 +26,7 @@ export function Navbar() {
           <div className="hidden md:block">
             <Link href="/" className="font-bold text-xl">
               <Image
-                src={"/solana-logo.png"}
+                src={"/bounty-quest.png"}
                 width={40}
                 height={40}
                 alt="Logo"
