@@ -21,7 +21,9 @@ const twitterClient = new TwitterApi({
 export class TaskGeneratorService {
   private static async generateTaskWithAI(): Promise<GeneratedTask> {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-pro-exp-02-05",
+    });
 
     const prompt = `
       Generate a creative Twitter task related to one of these categories: blockchain, memes, or NFTs.
