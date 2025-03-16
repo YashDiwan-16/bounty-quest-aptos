@@ -1,0 +1,11 @@
+[package]
+name = "BountyQuest"
+version = "1.0.0"
+authors = ["BountyQuest Team"]
+license = "Apache-2.0"
+
+[addresses]
+bounty_quest = "_"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "mainnet" }

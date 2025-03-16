@@ -3,6 +3,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import clientPromise from "../lib/clientpromise";
 import { ObjectId } from "mongodb";
 import TwitterApi from "twitter-api-v2";
+// Add Aptos SDK imports
+import {
+  Account,
+  Aptos,
+  AptosConfig,
+  Ed25519PrivateKey,
+  Network,
+} from "@aptos-labs/ts-sdk";
 
 export interface GeneratedTask {
   title: string;
@@ -10,6 +18,10 @@ export interface GeneratedTask {
   category: "blockchain" | "memes" | "nfts";
   requirements: string[];
   evaluationCriteria: string[];
+  rewards: {
+    usdcAmount: string;
+    nftReward?: string;
+  };
 }
 
 const twitterClient = new TwitterApi({
@@ -36,7 +48,7 @@ export class TaskGeneratorService {
         "description": "clear task description",
         "category": "one of: blockchain, memes, nfts",
         "requirements": ["list of specific requirements"],
-        "evaluationCriteria": ["specific criteria for judging"]
+        "evaluationCriteria": ["specific criteria for judging"],
         "rewards": {
           "usdcAmount": "any number from 1 to 1000",
           "nftReward": "optional NFT reward"
@@ -57,7 +69,22 @@ export class TaskGeneratorService {
       }
 
       const jsonText = jsonMatch[0];
-      return JSON.parse(jsonText);
+      const parsedTask = JSON.parse(jsonText);
+
+      // Validate that the required fields exist
+      if (
+        !parsedTask.title ||
+        !parsedTask.description ||
+        !parsedTask.category ||
+        !Array.isArray(parsedTask.requirements) ||
+        !Array.isArray(parsedTask.evaluationCriteria) ||
+        !parsedTask.rewards ||
+        !parsedTask.rewards.usdcAmount
+      ) {
+        throw new Error("Generated task missing required fields");
+      }
+
+      return parsedTask;
     } catch (error) {
       console.error("Error generating task:", error);
       // Fallback to a default task in case of failure
@@ -75,6 +102,10 @@ export class TaskGeneratorService {
           "Relevance to blockchain",
           "Engagement potential",
         ],
+        rewards: {
+          usdcAmount: "100",
+          nftReward: "Limited edition Bounty Quest NFT badge",
+        },
       };
     }
   }
@@ -200,6 +231,122 @@ export class TaskGeneratorService {
     return db.collection("tasks").find({ isActive: false }).toArray();
   }
 
+  // Helper method to send Aptos tokens
+  private static async sendAptosTokens(
+    recipientAddress: string,
+    amount: number
+  ): Promise<string> {
+    try {
+      // Initialize Aptos clients
+      const config = new AptosConfig({ network: Network.DEVNET });
+      const aptos = new Aptos(config);
+
+      // Create owner account from private key
+      const ownerPrivateKey = process.env.APTOS_OWNER_PRIVATE_KEY;
+      if (!ownerPrivateKey) {
+        throw new Error("Missing APTOS_OWNER_PRIVATE_KEY environment variable");
+      }
+      const privateKey = new Ed25519PrivateKey(ownerPrivateKey);
+
+      const ownerAccount = Account.fromPrivateKey({
+        privateKey,
+      });
+
+      // Build transaction for token transfer
+      const txn = await aptos.transaction.build.simple({
+        sender: ownerAccount.accountAddress,
+        data: {
+          function: "0x1::aptos_account::transfer",
+          functionArguments: [recipientAddress, amount * 100000000], // Convert to Octas (10^8 Octas = 1 APT)
+        },
+      });
+
+      // Sign and submit transaction
+      const committedTxn = await aptos.signAndSubmitTransaction({
+        signer: ownerAccount,
+        transaction: txn,
+      });
+
+      // Wait for transaction to be confirmed
+      const executedTransaction = await aptos.waitForTransaction({
+        transactionHash: committedTxn.hash,
+      });
+
+      return executedTransaction.hash;
+    } catch (error) {
+      console.error("Error sending Aptos tokens:", error);
+      throw error;
+    }
+  }
+
+  // Helper method to interact with bounty smart contract
+  private static async distributeBountyRewards(
+    taskId: string,
+    winners: string[]
+  ): Promise<string> {
+    try {
+      const config = new AptosConfig({ network: Network.DEVNET });
+      const aptos = new Aptos(config);
+
+      // Create owner account from private key
+      const ownerPrivateKey = process.env.APTOS_OWNER_PRIVATE_KEY;
+      if (!ownerPrivateKey) {
+        throw new Error("Missing APTOS_OWNER_PRIVATE_KEY environment variable");
+      }
+      const privateKey = new Ed25519PrivateKey(ownerPrivateKey);
+
+      const ownerAccount = Account.fromPrivateKey({
+        privateKey,
+      });
+
+      const moduleAddress =
+        process.env.BOUNTY_CONTRACT_ADDRESS || ownerAccount.accountAddress;
+
+      // First, complete the task with winners
+      const completeTxn = await aptos.transaction.build.simple({
+        sender: ownerAccount.accountAddress,
+        data: {
+          function: `${moduleAddress}::task_rewards::complete_task`,
+          functionArguments: [taskId, winners],
+        },
+      });
+
+      const committedTxn1 = await aptos.signAndSubmitTransaction({
+        signer: ownerAccount,
+        transaction: completeTxn,
+      });
+
+      // Wait for transaction to be confirmed
+      await aptos.waitForTransaction({
+        transactionHash: committedTxn1.hash,
+      });
+
+      // Then distribute rewards
+      const distributeTxn = await aptos.transaction.build.simple({
+        sender: ownerAccount.accountAddress,
+        data: {
+          function: `${moduleAddress}::task_rewards::distribute_rewards`,
+          functionArguments: [taskId],
+        },
+      });
+
+      const committedTxn2 = await aptos.signAndSubmitTransaction({
+        signer: ownerAccount,
+        transaction: distributeTxn,
+      });
+
+      // Wait for transaction to be confirmed
+      const executedTxn = await aptos.waitForTransaction({
+        transactionHash: committedTxn2.hash,
+      });
+
+      return executedTxn.hash;
+    } catch (error) {
+      console.error("Error distributing rewards via smart contract:", error);
+      throw error;
+    }
+  }
+
   public static async setTaskWinner() {
     let updateCount = 0;
     const client = await clientPromise;
@@ -219,23 +366,111 @@ export class TaskGeneratorService {
     const taskIds = completedTaskinDeclaredTime.map((task) => task._id);
 
     for (const taskId of taskIds) {
+      // Get task details to retrieve the prize amount
+      const taskDetails = await tasks.findOne({ _id: taskId });
+      if (
+        !taskDetails ||
+        !taskDetails.rewards ||
+        !taskDetails.rewards.usdcAmount
+      ) {
+        console.warn(
+          `Task ${taskId} has no rewards information, skipping token distribution`
+        );
+        continue;
+      }
+
+      const prizePool = parseFloat(taskDetails.rewards.usdcAmount);
+
       const submissions = await submission
         .find({ taskId: taskId.toString() })
         .sort({ "scores.overall": -1 })
         .limit(3)
         .toArray();
+
+      // Create winners array for database update
       const winners = submissions.map((submission) => submission.publicKey);
-      const updatedWinner = await tasks.updateOne(
-        { _id: taskId },
-        {
-          $set: {
-            winners,
-            isWinnerDeclared: true,
-          },
+
+      // Distribution percentages
+      const distribution = [0.4, 0.25, 0.15]; // 1st, 2nd, 3rd place
+
+      // Send tokens to winners
+      const transactions = [];
+      for (let i = 0; i < submissions.length; i++) {
+        if (i < distribution.length) {
+          // Make sure we don't exceed our distribution array
+          const winnerAmount = prizePool * distribution[i];
+          try {
+            const txHash = await this.sendAptosTokens(
+              submissions[i].publicKey,
+              winnerAmount
+            );
+            transactions.push({
+              winner: submissions[i].publicKey,
+              rank: i + 1,
+              amount: winnerAmount,
+              txHash,
+            });
+          } catch (error) {
+            console.error(`Failed to send tokens to winner ${i + 1}:`, error);
+          }
         }
-      );
-      if (updatedWinner) {
-        updateCount++;
+      }
+
+      // Send remaining 20% to owner account
+      const ownerAmount = prizePool * 0.2;
+      const ownerAddress = process.env.APTOS_OWNER_ADDRESS;
+      if (ownerAddress) {
+        try {
+          const txHash = await this.sendAptosTokens(ownerAddress, ownerAmount);
+          transactions.push({
+            winner: "owner",
+            amount: ownerAmount,
+            txHash,
+          });
+        } catch (error) {
+          console.error("Failed to send tokens to owner:", error);
+        }
+      }
+
+      try {
+        // Use smart contract for distribution if enabled
+        if (process.env.USE_SMART_CONTRACT === "true") {
+          const txHash = await this.distributeBountyRewards(
+            taskId.toString(),
+            winners
+          );
+
+          const updatedWinner = await tasks.updateOne(
+            { _id: taskId },
+            {
+              $set: {
+                winners,
+                isWinnerDeclared: true,
+                transactionHash: txHash,
+              },
+            }
+          );
+          if (updatedWinner) {
+            updateCount++;
+          }
+        } else {
+          // Fallback to the current implementation
+          const updatedWinner = await tasks.updateOne(
+            { _id: taskId },
+            {
+              $set: {
+                winners,
+                isWinnerDeclared: true,
+                transactions,
+              },
+            }
+          );
+          if (updatedWinner) {
+            updateCount++;
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to set task winner for task ${taskId}:`, error);
       }
     }
     return updateCount;
