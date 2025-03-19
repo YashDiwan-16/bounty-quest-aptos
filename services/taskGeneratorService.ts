@@ -9,6 +9,10 @@ export interface GeneratedTask {
   category: "blockchain" | "memes" | "nfts";
   requirements: string[];
   evaluationCriteria: string[];
+  rewards?: {
+    aptAmount: number;
+    nftReward: boolean;
+  };
 }
 
 const twitterClient = new TwitterApi({
@@ -35,8 +39,8 @@ export class TaskGeneratorService {
         "requirements": ["list of specific requirements"],
         "evaluationCriteria": ["specific criteria for judging"]
         "rewards": {
-          "usdcAmount": "any number from 1 to 1000",
-          "nftReward": "optional NFT reward"
+          "aptAmount": "any number from 1 to 5",
+          "nftReward": true
         }
       }
 
@@ -98,6 +102,14 @@ export class TaskGeneratorService {
   public static async createNewTask(durationHours: number = 4) {
     const task = await this.generateTaskWithAI();
 
+    // Ensure task has reward information
+    if (!task.rewards) {
+      task.rewards = {
+        aptAmount: 1.0,
+        nftReward: true
+      };
+    }
+
     const client = await clientPromise;
     const db = client.db("tweetcontest");
 
@@ -113,6 +125,7 @@ export class TaskGeneratorService {
       isActive: true,
       winners: [],
       isWinnerDeclared: false,
+      rewardDistributed: false,
       _id: new ObjectId(),
     });
     const tweet = await this.PostTweetofTask(
@@ -205,6 +218,18 @@ export class TaskGeneratorService {
       );
       if (updatedWinner) {
         updateCount++;
+        
+        // Trigger reward distribution for the winner if there is one
+        if (winners.length > 0) {
+          try {
+            // This can be done asynchronously or via a queue system
+            // For now, we'll just log it
+            console.log(`Winner declared for task ${taskId}. Winner: ${winners[0]}`);
+            console.log('Rewards should be distributed via the /api/tasks/reward endpoint');
+          } catch (error) {
+            console.error(`Failed to initiate reward distribution for task ${taskId}:`, error);
+          }
+        }
       }
     }
     return updateCount;

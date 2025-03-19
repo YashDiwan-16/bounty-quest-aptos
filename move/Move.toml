@@ -1,0 +1,16 @@
+[package]
+name = "BountyQuest"
+version = "1.0.0"
+authors = ["Bounty Quest"]
+
+[addresses]
+bounty_quest = "_"  # This will be replaced by the account address during deployment
+aptos_token = "0x4"
+std = "0x1"
+aptos_framework = "0x1"
+aptos_std = "0x1"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "mainnet" }
+AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "mainnet" }
+AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token/", rev = "mainnet" } 

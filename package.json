@@ -1,58 +1,55 @@
 {
-  "name": "bounty-quest",
-  "version": "0.1.0",
-  "private": true,
+  "name": "bounty-quest-aptos",
+  "version": "1.0.0",
+  "description": "AI-powered bounty quest platform with Aptos blockchain integration",
+  "main": "index.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "compile-move": "cd move && aptos move compile",
+    "publish-move": "cd move && aptos move publish --named-addresses bounty_quest=YOUR_ACCOUNT_ADDRESS"
   },
   "dependencies": {
-    "@aptos-labs/ts-sdk": "^1.35.0",
-    "@aptos-labs/wallet-adapter-react": "^4.1.1",
-    "@google/generative-ai": "^0.24.0",
-    "@hookform/resolvers": "^4.1.3",
-    "@radix-ui/react-alert-dialog": "^1.1.6",
-    "@radix-ui/react-avatar": "^1.1.3",
-    "@radix-ui/react-collapsible": "^1.1.3",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-dropdown-menu": "^2.1.6",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-select": "^2.1.6",
-    "@radix-ui/react-slot": "^1.1.2",
-    "@solana/web3.js": "^1.98.0",
-    "@tanstack/react-query": "^5.67.2",
-    "bcryptjs": "^3.0.2",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "framer-motion": "^12.4.10",
-    "keyv": "^5.3.1",
-    "lucide-react": "^0.479.0",
-    "mongodb": "^6.14.2",
-    "next": "15.2.2-canary.4",
-    "next-themes": "^0.4.4",
-    "nodemailer": "^6.10.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-hook-form": "^7.54.2",
-    "react-tweet": "^3.2.2",
-    "sonner": "^2.0.1",
-    "tailwind-merge": "^3.0.2",
-    "tailwindcss-animate": "^1.0.7",
-    "twitter-api-v2": "^1.20.2",
-    "zod": "^3.24.2"
+    "@aptos-labs/ts-sdk": "^0.0.9",
+    "@google/generative-ai": "^0.1.3",
+    "@langchain/anthropic": "^0.0.10",
+    "@langchain/core": "^0.1.18",
+    "@langchain/langgraph": "^0.0.8",
+    "@meta-move/move-agent-kit": "^0.1.0",
+    "mongodb": "^5.7.0",
+    "next": "14.0.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "twitter-api-v2": "^1.15.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/nodemailer": "^6.4.17",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.2.2-canary.4",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "14.0.1",
+    "postcss": "^8.0.0",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/bounty-quest-aptos.git"
+  },
+  "keywords": [
+    "aptos",
+    "blockchain",
+    "nft",
+    "bounty",
+    "ai",
+    "move",
+    "move-agent-kit"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }
