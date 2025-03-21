@@ -115,7 +115,7 @@ const AboutPage: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-16 relative overflow-hidden">
+    <div className=" mx-auto px-4 py-16 relative overflow-hidden">
       <motion.div
         className="absolute inset-0 -z-10 opacity-10"
         animate={{

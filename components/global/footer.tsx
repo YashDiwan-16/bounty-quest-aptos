@@ -6,7 +6,7 @@ const Footer = () => {
 
   return (
     <footer className="w-full bg-black text-slate-100 py-4 px-6 border-t border-slate-800">
-      <div className="container mx-auto max-w-6xl">
+      <div className="mx-auto max-w-6xl">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Project Name */}
           <div className="order-1 sm:order-none">

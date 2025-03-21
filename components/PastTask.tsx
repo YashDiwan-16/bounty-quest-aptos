@@ -192,7 +192,7 @@ const TaskContent = () => {
   }
 
   return (
-    <div className="container mx-auto">
+    <div className="mx-auto">
       <div className="flex justify-end mb-4">
         <Select value={selectedCategory} onValueChange={handleCategoryChange}>
           <SelectTrigger className="w-[180px]">

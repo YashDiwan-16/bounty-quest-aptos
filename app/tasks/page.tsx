@@ -5,7 +5,7 @@ export default function TasksPage() {
 
   return (
     <main className={`min-h-screen py-12 transition-all duration-200`}>
-      <div className="container mx-auto px-4">
+      <div className="mx-auto px-4">
         <h1 className="text-4xl font-bold text-center mb-12">
           Crypto Twitter Challenge
         </h1>
