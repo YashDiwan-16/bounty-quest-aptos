@@ -86,10 +86,9 @@ export function XWalletMapper() {
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription>
-              <ol className="list-decimal pl-4 space-y-2">
+              <ol className="list-decimal pl-4 space-y-2 ">
                 <li>
-                  Copy your wallet address:{" "}
-                  <code className="bg-muted p-1 rounded">{walletAddress}</code>
+                  Copy your wallet address:{" "} <code className="bg-muted rounded text-xs overflow-hidden text-ellipsis max-w-[200px] inline-block">{walletAddress}</code>
                 </li>
                 <li>Post a tweet containing your wallet address</li>
                 <li>Copy the tweet URL and paste it below</li>

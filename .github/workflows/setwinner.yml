@@ -1,0 +1,20 @@
+name: Create Task
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+
+jobs:
+  test-cron-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log Current Time
+        run: echo "Cron job executed at $(date)"
+
+      - name: Call API
+        run: |
+          curl -X PUT ${{ secrets.SET_WINNER_API }} \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.AUTHENTICATION_TOKEN }}" \
+          -d '{"durationHours": 21}'

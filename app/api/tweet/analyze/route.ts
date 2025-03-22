@@ -30,7 +30,7 @@ function calculateEngagementScore(metrics: {
 }
 
 async function evaluateTweetContent(tweetText: string, task: Task) {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-pro-exp-02-05" });
 
   const prompt = `
     Task Requirements: ${task.requirements.join(", ")}
@@ -54,7 +54,9 @@ The response must start with { and end with } and be valid JSON with this struct
 
   const result = await model.generateContent(prompt);
   const response = result.response;
-  return JSON.parse(response.text());
+  // response is coming as ```json{...}``` so we need to remove the backticks and parse the json
+  const jsonResponse = response.text().replace(/```json|```/g, "");
+  return JSON.parse(jsonResponse);
 }
 
 async function fetchTweetData(tweetId: string) {

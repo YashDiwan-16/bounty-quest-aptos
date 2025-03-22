@@ -8,6 +8,7 @@ import { WalletProvider } from "@/components/AppWalletProvider";
 import Footer from "@/components/global/footer";
 import { AutoConnectProvider } from "@/components/AutoConnectProvider";
 import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
+import ChatButton from "@/components/chatbot/chat-button";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
               >
                 <Navbar />
                 <main className="min-h-screen pt-16">{children}</main>
+                <ChatButton />
                 <Footer />
                 <Toaster richColors closeButton />
               </ThemeProvider>

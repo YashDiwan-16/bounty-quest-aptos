@@ -1,0 +1,19 @@
+name: Check Task
+
+on:
+  schedule:
+    - cron: "0 * * * *" # Runs every hour
+
+jobs:
+  test-cron-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log Current Time
+        run: echo "Cron job executed at $(date)"
+
+      - name: Call API
+        env:
+          API_URL: ${{ secrets.CHECK_TASK_API }}
+        run: |
+          curl -X GET "$API_URL" -H "Content-Type: application/json"
