@@ -68,7 +68,7 @@ export function Navbar() {
           {/* Logo - Visible on all screen sizes */}
           <Link href="/" className="flex items-center">
             <Image
-              src={"/solana-logo.png"}
+              src={"/bounty-quest.png"}
               width={36}
               height={36}
               alt="Logo"
