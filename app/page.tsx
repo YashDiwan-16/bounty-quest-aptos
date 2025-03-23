@@ -159,7 +159,7 @@ export default function LandingPage() {
               transition={{ duration: 0.7 }}
               className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-10"
             >
-              Whether you're a seasoned developer or a beginner, test your skills,
+              Whether you&pos;re a seasoned developer or a beginner, test your skills,
               learn, and grow while earning crypto rewards.
             </motion.p>
             <Link
